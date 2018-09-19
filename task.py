@@ -11,10 +11,12 @@ import datetime
 import tensorflow as tf
 from nfetc import NFETC
 
+
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
+
 
 class Task:
     def __init__(self, model_name, data_name, cv_runs, params_dict, logger):
@@ -245,6 +247,7 @@ class Task:
         self.embedding.save(self.checkpoint_prefix)
         print("Saved model to {}".format(path))
 
+
 class TaskOptimizer:
     def __init__(self, model_name, data_name, cv_runs, max_evals, logger):
         self.model_name = model_name
@@ -272,6 +275,7 @@ class TaskOptimizer:
     def run(self):
         trials = Trials()
         best = fmin(self._obj, self.model_param_space._build_space(), tpe.suggest, self.max_evals, trials)
+        print('best', best)
         best_params = space_eval(self.model_param_space._build_space(), best)
         best_params = self.model_param_space._convert_into_param(best_params)
         trial_loss = np.asarray(trials.losses(), dtype=float)
@@ -285,6 +289,7 @@ class TaskOptimizer:
         self.task._print_param_dict(best_params)
         self.logger.info("-" * 50)
 
+
 def parse_args(parser):
     parser.add_option("-m", "--model", type="string", dest="model_name")
     parser.add_option("-d", "--data", type="string", dest="data_name")
@@ -293,6 +298,7 @@ def parse_args(parser):
     options, args = parser.parse_args()
     return options, args
 
+
 def main(options):
     time_str = datetime.datetime.now().isoformat()
     logname = "[Model@%s]_[Data@%s]_%s.log" % (options.model_name, options.data_name, time_str)
@@ -300,7 +306,28 @@ def main(options):
     optimizer = TaskOptimizer(options.model_name, options.data_name, options.cv_runs, options.max_evals, logger)
     optimizer.run()
 
-if __name__ == "__main__":
+
+def __run_by_args():
     parser = OptionParser()
     options, args = parse_args(parser)
     main(options)
+
+
+def __run():
+    data_name = 'wiki'
+    model_name = 'nfetc'
+    max_evals = 100
+    cv_runs = 3
+
+    str_today = datetime.date.today().strftime('%y-%m-%d')
+    logname = "%s_%s_%s.log" % (model_name, data_name, str_today)
+    logger = logging_utils._get_logger(config.LOG_DIR, logname)
+    optimizer = TaskOptimizer(model_name, data_name, cv_runs, max_evals, logger)
+    optimizer.run()
+
+
+if __name__ == "__main__":
+    from hyperopt import fmin, tpe, hp
+
+    # __run_by_args()
+    __run()

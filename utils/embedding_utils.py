@@ -1,6 +1,7 @@
 import numpy as np
 import gensim
 import json
+from utils import dhlutils
 
 class Embedding:
 	def __init__(self, vocab_size, embedding_dim, word2id, id2word, embedding,
@@ -23,21 +24,24 @@ class Embedding:
 	
 	@classmethod
 	def fromCorpus(cls, f, corpus, max_document_length, mention_size):
-		if ".txt" in f:
-			model = gensim.models.KeyedVectors.load_word2vec_format(f, binary=False)
-		else:
-			model = gensim.models.KeyedVectors.load_word2vec_format(f, binary=True)
+		word_vecs = dhlutils.read_glove_word_vecs(f)
+		embedding_dim = len(next(iter(word_vecs.values())))
+		print(len(word_vecs), 'words from word vecs file, dim:', embedding_dim)
+		# if ".txt" in f:
+		# 	model = gensim.models.KeyedVectors.load_word2vec_format(f, binary=False)
+		# else:
+		# 	model = gensim.models.KeyedVectors.load_word2vec_format(f, binary=True)
 
 		wordSet = set(['"'])
 		for sen in corpus:
 			words = sen.split()
 			for w in words:
-				if w in model:
+				if w in word_vecs:
 					wordSet.add(w)
 
 		vocab_size = len(wordSet)
 		print("%d unique tokens have been found!" % vocab_size)
-		embedding_dim = model.syn0.shape[1]
+		# embedding_dim = model.syn0.shape[1]
 		word2id = {"<PAD>":0}
 		id2word = {0:"<PAD>"}
 		word2id = {"<UNK>":1}
@@ -50,7 +54,8 @@ class Embedding:
 		for i, word in enumerate(wordSet):
 			word2id[word] = i+2
 			id2word[i+2] = word
-			embedding[i+2, :] = model[word]
+			# embedding[i+2, :] = model[word]
+			embedding[i+2, :] = word_vecs[word]
 
 		kwargs = {}
 		kwargs["vocab_size"] = vocab_size + 2

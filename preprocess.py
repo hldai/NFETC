@@ -190,6 +190,7 @@ def preprocess(data_name, if_clean=False, full_path=False):
             outfile.write("%d\t%d\t%s\t%s\t%s\n" % (p1, p2, text, mention, " ".join(out_type)))
     outfile.close()
 
+
 def parse_args(parser):
     parser.add_option("-d", "--data_name", type="string", dest="data_name")
     parser.add_option("-c", default=False, action="store_true", dest="if_clean")
@@ -198,10 +199,20 @@ def parse_args(parser):
     (options, args) = parser.parse_args()
     return options, args
 
-def main(options):
-    preprocess(options.data_name, options.if_clean, options.full_path)
 
-if __name__ == "__main__":
+def __run_by_args():
     parser = OptionParser()
     options, args = parse_args(parser)
-    main(options)
+    preprocess(options.data_name, options.if_clean, options.full_path)
+
+
+def __run():
+    data_name = 'wiki'
+    if_clean = False
+    full_path = False
+    preprocess(data_name, if_clean, full_path)
+
+
+if __name__ == "__main__":
+    # __run_by_args()
+    __run()
